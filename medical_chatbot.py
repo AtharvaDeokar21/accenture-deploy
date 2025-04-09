@@ -14,6 +14,23 @@ from whatsapp_alerts import send_whatsapp_alert
 from datetime import datetime
 import textwrap
 import math
+import gdown
+import zipfile
+
+def download_faiss_index():
+    faiss_folder = "faiss_index"
+    faiss_zip = "faiss_index.zip"
+    drive_file_id = "1sjZ-3OftY7nYZ53Z0mzzcx5bkU20cIDY"
+
+    if not os.path.exists(faiss_folder):
+        print("FAISS index not found. Downloading...")
+        url = f"https://drive.google.com/uc?id={drive_file_id}"
+        gdown.download(url, faiss_zip, quiet=False)
+        with zipfile.ZipFile(faiss_zip, 'r') as zip_ref:
+            zip_ref.extractall(faiss_folder)
+        print("Download complete.")
+
+download_faiss_index()
 
 load_dotenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
@@ -166,6 +183,6 @@ def upload():
             except Exception as cleanup_error:
                 print(f"Could not delete temp file: {cleanup_error}")
 
-
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
