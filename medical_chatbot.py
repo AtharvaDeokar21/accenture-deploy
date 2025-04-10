@@ -26,8 +26,20 @@ def download_faiss_index():
         print("FAISS index not found. Downloading...")
         url = f"https://drive.google.com/uc?id={drive_file_id}"
         gdown.download(url, faiss_zip, quiet=False)
-        with zipfile.ZipFile(faiss_zip, 'r') as zip_ref:
-            zip_ref.extractall(faiss_folder)
+
+        # Extract the outer zip
+        with zipfile.ZipFile(faiss_zip, 'r') as outer_zip:
+            outer_zip.extractall(faiss_folder)
+
+        # Check if there's a zip inside
+        for file in os.listdir(faiss_folder):
+            if file.endswith(".zip"):
+                inner_zip_path = os.path.join(faiss_folder, file)
+                with zipfile.ZipFile(inner_zip_path, 'r') as inner_zip:
+                    inner_zip.extractall(faiss_folder)
+                print(f"Extracted inner zip: {file}")
+                break  # Assumes only one inner zip
+
         print("Download complete.")
 
 download_faiss_index()
