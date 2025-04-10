@@ -13,7 +13,7 @@ from langchain.chains import RetrievalQA
 from whatsapp_alerts import send_whatsapp_alert
 from datetime import datetime
 import textwrap
-import math
+import shutil
 import gdown
 import zipfile
 
@@ -27,18 +27,25 @@ def download_faiss_index():
         url = f"https://drive.google.com/uc?id={drive_file_id}"
         gdown.download(url, faiss_zip, quiet=False)
 
-        # Extract the outer zip
+        # Step 1: Extract the outer zip
         with zipfile.ZipFile(faiss_zip, 'r') as outer_zip:
             outer_zip.extractall(faiss_folder)
 
-        # Check if there's a zip inside
+        # Step 2: Extract inner zip if found
         for file in os.listdir(faiss_folder):
             if file.endswith(".zip"):
                 inner_zip_path = os.path.join(faiss_folder, file)
                 with zipfile.ZipFile(inner_zip_path, 'r') as inner_zip:
                     inner_zip.extractall(faiss_folder)
-                print(f"Extracted inner zip: {file}")
-                break  # Assumes only one inner zip
+
+        # Step 3: Search for index.faiss and .pkl inside any subfolder, move to root
+        for root, dirs, files in os.walk(faiss_folder):
+            for file in files:
+                if file.endswith(".faiss") or file.endswith(".pkl"):
+                    full_path = os.path.join(root, file)
+                    target_path = os.path.join(faiss_folder, file)
+                    if full_path != target_path:
+                        shutil.move(full_path, target_path)
 
         print("Download complete.")
 
