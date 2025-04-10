@@ -4,17 +4,20 @@ import json
 import base64
 from PIL import Image
 from mistralai import Mistral
-import google.generativeai as genai
 from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage, HumanMessage
+
+
+load_dotenv()
+os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.2)
 
 # Load environment variables
 load_dotenv()
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Configure Gemini
-genai.configure(api_key=GEMINI_API_KEY)
-
+#
 # Initialize Mistral client
 client = Mistral(api_key=MISTRAL_API_KEY)
 
@@ -77,8 +80,6 @@ def extract_information_from_image(image_path):
 
 # Generate advice using Gemini
 def generate_doctor_advice(extracted_data):
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
     prompt = f"""
 You are a professional doctor. Analyze the following patient report:
 
@@ -93,10 +94,13 @@ Based on the test values, symptoms, or any indicators provided, give professiona
 
 Respond in a friendly, clear tone in markdown format.
 """
-
     try:
         print("[INFO] Sending data to Gemini for medical advice...")
-        response = model.generate_content(prompt)
-        return response.text
+        messages = [
+            SystemMessage(content="You are a helpful, professional medical advisor."),
+            HumanMessage(content=prompt)
+        ]
+        response = llm.invoke(messages)
+        return response.content
     except Exception as e:
         raise Exception(f"Failed to generate advice with Gemini: {e}")
