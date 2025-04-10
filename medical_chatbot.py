@@ -202,6 +202,11 @@ def upload():
             except Exception as cleanup_error:
                 print(f"Could not delete temp file: {cleanup_error}")
 
+@app.route("/test")
+def test():
+    return "Test successful"
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
